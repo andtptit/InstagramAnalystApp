@@ -1,0 +1,24 @@
+# Trình quản lý bí mật (KHÔNG ĐƯỢC XÓA)
+.env
+*.json
+!package.json
+!package-lock.json
+
+# Thư mục hệ thống & Thư viện
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Dữ liệu tạm thời (Temp)
+output/
+screenshots/
+data.xlsx
+*.webp
+*.png
+*.jpg
+*.jpeg
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

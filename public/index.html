@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Analyst Pro v5.0 Master</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>🔮 Instagram Nội Dung AI (V6.1) <span class="badge">PRO</span></h1>
+            <p class="subtitle" style="margin: 0; opacity: 0.7; font-size: 0.85rem;">Split Architecture: Static Discovery + Vision AI</p>
+        </div>
+        <button id="btnSettings" class="btn-outline" style="padding: 0.4rem 1rem; border-radius: 8px;">⚙️ GSheets</button>
+    </header>
+
+    <main class="container">
+        <!-- CỘT TRÁI -->
+        <aside class="left-panel">
+            <div class="panel-section">
+                <h2>1. Nguồn Dữ Liệu (Discovery)</h2>
+                <p class="subtitle">Agent sẽ cuộn lấy bài, mở từng bài xem có đạt 'Số Tim' hay không.</p>
+                <textarea id="urlInput" placeholder="Ví dụ:&#10;https://www.instagram.com/southkorea.explores/&#10;https://www.instagram.com/p/12345/"></textarea>
+                
+                <div class="config-grid">
+                    <div>
+                        <label>Max Bài Cào (Mỗi Profile)</label>
+                        <input type="number" id="limitInput" value="5">
+                    </div>
+                    <div>
+                        <label>Số Tim Tối Thiểu (Lọc)</label>
+                        <input type="number" id="minLikesInput" value="1000" placeholder="VD: 500">
+                    </div>
+                </div>
+                
+                <button id="btnFilter" class="btn-secondary">🔍 Yêu cầu Bot cào và Lọc URL</button>
+            </div>
+
+            <div class="panel-section">
+                <h2>2. Danh sách URL Đạt Chuẩn <span class="highlight">(Sau bước 1)</span></h2>
+                <p class="subtitle">AI Vision sẽ chỉ phân tích các Link có trong hộp này.</p>
+                <textarea id="approvedUrlList" placeholder="App tự động đổ URL đạt chuẩn vào đây... Hoặc bạn dán link bài viết trực tiếp vào đây cũng được."></textarea>
+            </div>
+
+            <div class="panel-section">
+                <h2>3. AI Mắt thần & Trọng tài <span class="highlight">(Custom Prompt)</span></h2>
+                <textarea id="customPrompt" placeholder="Nhập yêu cầu...">Chỉ phân tích các bài viết có liên quan đến du lịch/chi phí. Đối với bài thỏa mãn, hãy dịch text sang tiếng Việt, tóm tắt 4 slide ngắn, mỗi slide dưới 15 từ. Nếu bài viết không nói về chi phí hoặc kinh nghiệm đi lại, hãy ghi đúng chữ: SKIP.</textarea>
+                
+                <button id="btnRun" class="btn-primary">🤖 KÍCH HOẠT QUY TRÌNH MẮT THẦN CHỤP ẢNH</button>
+            </div>
+        </aside>
+
+        <!-- CỘT PHẢI -->
+        <section class="right-panel">
+            <div class="panel-section" style="flex: 1; display: flex; flex-direction: column;">
+                <h2>Kết quả Thị giác AI (Live Cards)</h2>
+                <div id="resultsContainer" class="results-grid" style="flex: 1;">
+                    <p class="empty-state" style="color: var(--text-muted);">Sau khi Mắt thần gửi dữ liệu cho API Gemini, thẻ tóm tắt sẽ hiện tại đây.</p>
+                </div>
+            </div>
+
+            <div class="panel-section terminal-section">
+                <div class="terminal-header">
+                    <h2>Live Log Console (Terminal Ảo)</h2>
+                    <button id="btnClearLog" class="btn-clear-log">🗑️ Xóa Log</button>
+                </div>
+                <div id="liveLog" class="terminal-body">
+                    <p class="log-line info">Hệ thống sẵn sàng. Hệ thống Log Server-Sent Events đã kết nối.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL GSheet Settings -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>☁️ Cấu hình Google Sheets (V6)</h3>
+                <button class="btn-close" id="btnCloseModal">×</button>
+            </div>
+            
+            <label style="font-size: 0.85rem; color: var(--text-muted); display:block; margin-bottom:0.25rem;">Spreadsheet ID</label>
+            <input type="text" id="gsheetId" placeholder="Mã ID trên URL..." style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 0.5rem; border-radius: 6px; box-sizing: border-box; margin-bottom: 0.75rem;">
+            
+            <label style="font-size: 0.85rem; color: var(--text-muted); display:block; margin-bottom:0.25rem;">Sheet Name (Mặc định: Sheet1)</label>
+            <input type="text" id="gsheetName" value="Sheet1" style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 0.5rem; border-radius: 6px; box-sizing: border-box; margin-bottom: 0.75rem;">
+            
+            <label style="font-size: 0.85rem; color: var(--text-muted); display:block; margin-bottom:0.25rem;">Service Account JSON Key</label>
+            <textarea id="gsheetJsonKey" placeholder="Dán toàn bộ nội dung file .json vào đây..." style="height: 80px; font-size: 0.75rem; margin-bottom: 1rem;"></textarea>
+            
+            <button id="btnSaveSettings" class="btn-primary" style="margin-top: 0;">💾 Lưu vào LocalStorage</button>
+            <p id="saveStatus" style="color: #10b981; font-size: 0.8rem; margin: 0.5rem 0 0 0; text-align: center; display: none;">Đã lưu cấu hình thành công!</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
