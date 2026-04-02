@@ -54,6 +54,8 @@ document.getElementById('btnFilter').addEventListener('click', async () => {
     const urlsText = document.getElementById('urlInput').value.trim();
     const limit = parseInt(document.getElementById('limitInput').value) || 5;
     const minLikes = parseInt(document.getElementById('minLikesInput').value) || 0;
+    const minImages = parseInt(document.getElementById('minImagesInput').value) || 4;
+    const onlyCarousel = document.getElementById('onlyCarouselInput').checked;
 
     if (!urlsText) return alert('Vui lòng nhập Profile URL!');
     const urls = urlsText.split('\n').map(u => u.trim()).filter(u => u);
@@ -75,7 +77,7 @@ document.getElementById('btnFilter').addEventListener('click', async () => {
             const res = await fetch('/api/discover', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ profileUrl: url, limit, minLikes })
+                body: JSON.stringify({ profileUrl: url, limit, minLikes, minImages, onlyCarousel })
             });
             const data = await res.json();
             
@@ -125,12 +127,13 @@ document.getElementById('btnRun').addEventListener('click', async () => {
         } : null;
 
         const profileUrl = document.getElementById('urlInput').value.trim().split('\n')[0];
+        const modelName = document.getElementById('modelSelect').value;
 
         try {
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, customPrompt, gsheetConfig, profileUrl })
+                body: JSON.stringify({ url, customPrompt, gsheetConfig, profileUrl, modelName })
             });
 
             const data = await response.json();

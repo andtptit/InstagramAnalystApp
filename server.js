@@ -59,7 +59,7 @@ app.get('/api/logs', (req, res) => {
 // ==========================================
 // 2. LOGIC LƯU EXCEL
 // ==========================================
-async function saveToExcel(url, rawData, summaryText) {
+async function saveToExcel(url, rawData, summaryObj) {
     try {
         const excelPath = path.join(__dirname, 'data.xlsx');
         const workbook = new ExcelJS.Workbook();
@@ -80,7 +80,7 @@ async function saveToExcel(url, rawData, summaryText) {
             worksheet.getRow(1).font = { bold: true };
         }
 
-        const shortSummary = summaryText.split('\n').filter(l => l.trim()).join(' ').substring(0, 200) + "...";
+        const shortSummary = (summaryObj.reworked_image_text || "").split('\n').filter(l => l.trim()).join(' ').substring(0, 200) + "...";
 
         worksheet.addRow({
             timestamp: new Date().toLocaleString('vi-VN'),
@@ -95,7 +95,7 @@ async function saveToExcel(url, rawData, summaryText) {
         console.error("Lỗi khi lưu Excel:", e);
     }
 }
-async function saveToGoogleSheets(gsheetConfig, url, rawData, summaryText, profileUrl) {
+async function saveToGoogleSheets(gsheetConfig, url, rawData, summaryObj, profileUrl) {
     if (!gsheetConfig || !gsheetConfig.spreadsheetId || !gsheetConfig.jsonKey) {
         return console.log("[Google Sheets] Bỏ qua lưu Cloud vì chưa cấu hình.");
     }
@@ -123,22 +123,22 @@ async function saveToGoogleSheets(gsheetConfig, url, rawData, summaryText, profi
         console.log(`[Google Sheets] Đang ghi dữ liệu vào Tab: ${sheet.title}`);
 
         // Đảm bảo Header đúng format
-        await sheet.setHeaderRow(['STT', 'Url Kênh', 'Url bài viết gốc', 'Số lượt tim', 'Caption', 'Nội dung ảnh']);
+        await sheet.setHeaderRow(['STT', 'Url Kênh', 'Url bài viết gốc', 'Số lượt tim', 'Caption gốc', 'Caption đã dịch', 'Nội dung ảnh gốc', 'Nội dung ảnh gốc đã dịch', 'Nội dung ảnh làm lại']);
 
         // Tính toán STT (Lấy số dòng hiện tại)
         const rows = await sheet.getRows();
         const stt = rows.length + 1;
-
-        // Nội dung ảnh (Slide 1-4)
-        const slidesText = summaryText.trim();
 
         await sheet.addRow({
             'STT': stt,
             'Url Kênh': rawData.authorUrl || profileUrl || "N/A",
             'Url bài viết gốc': url,
             'Số lượt tim': rawData.likesCount,
-            'Caption': rawData.caption || "N/A",
-            'Nội dung ảnh': slidesText
+            'Caption gốc': rawData.caption || "N/A",
+            'Caption đã dịch': summaryObj.translated_caption || "N/A",
+            'Nội dung ảnh gốc': summaryObj.original_image_text || "N/A",
+            'Nội dung ảnh gốc đã dịch': summaryObj.translated_image_text || "N/A",
+            'Nội dung ảnh làm lại': summaryObj.reworked_image_text || "N/A"
         });
 
         console.log(`[Google Sheets] ✅ Đã đẩy 1 dòng dữ liệu lên Cloud thành công!`);
@@ -154,16 +154,16 @@ async function saveToGoogleSheets(gsheetConfig, url, rawData, summaryText, profi
 
 // Endpoint Discovery (Chế độ quét & lọc Tim tĩnh)
 app.post('/api/discover', async (req, res) => {
-    const { profileUrl, limit, minLikes } = req.body;
+    const { profileUrl, limit, minLikes, minImages, onlyCarousel } = req.body;
     if (!profileUrl) return res.status(400).json({ success: false, error: 'Thiếu Profile URL' });
 
     try {
         console.log(`\n================================`);
         console.log(`[Khám Phá] Bắt đầu quét Profile: ${profileUrl}`);
-        console.log(`[Khám Phá] Max bài cần lấy: ${limit} | ĐK Loại: Dưới ${minLikes} Tim`);
+        console.log(`[Khám Phá] Điều kiện: Max ${limit || 20} bài | Min ${minLikes || 0} Tim | Min ${minImages || 4} Ảnh | Chỉ Carousel: ${onlyCarousel !== false}`);
         console.log(`================================`);
         
-        const urls = await discoverPosts(profileUrl, limit || 20, minLikes || 0);
+        const urls = await discoverPosts(profileUrl, limit || 20, minLikes || 0, minImages || 4, onlyCarousel !== false);
         
         console.log(`[Khám Phá] Hoàn tất. Lọc thành công ${urls.length} bài đạt chuẩn!`);
         res.json({ success: true, urls });
@@ -175,18 +175,18 @@ app.post('/api/discover', async (req, res) => {
 
 // Endpoint Analyze (Chế độ Phân tích Vision AI)
 app.post('/api/analyze', async (req, res) => {
-    const { url, customPrompt, gsheetConfig, profileUrl } = req.body;
+    const { url, customPrompt, gsheetConfig, profileUrl, modelName } = req.body;
     if (!url) return res.status(400).json({ success: false, error: 'Thiếu URL' });
 
     try {
         console.log(`\n[Phân Tích] Chuẩn bị trích xuất URL: ${url}`);
         const rawData = await getInstagramData(url);
         
-        console.log(`[Mắt Thần] Gửi tài nguyên cho AI xử lý Tóm tắt & Dịch Thuật...`);
-        const summary = await analyzeAndSummarize(rawData, customPrompt);
+        console.log(`[Mắt Thần] Gửi tài nguyên cho AI xử lý Tóm tắt & Dịch Thuật (Model: ${modelName || 'gemini-2.5-flash'})...`);
+        const summaryObj = await analyzeAndSummarize(rawData, customPrompt, modelName || 'gemini-2.5-flash');
 
         // Xử lý SKIP từ logic Prompt
-        if (summary.trim().toUpperCase() === 'SKIP') {
+        if (summaryObj.is_skipped) {
             console.log(`[Mắt Thần] AI quyết định SKIP bài viết do không thỏa mãn yêu cầu nội dung!`);
             return res.json({
                 success: true,
@@ -194,17 +194,19 @@ app.post('/api/analyze', async (req, res) => {
                 result: { url: url, message: "Bài viết bị loại (SKIP) vì Không phù hợp nội dung." }
             });
         }
+        
+        const summaryText = `**1. Caption (Dịch):**\n${summaryObj.translated_caption}\n\n**2. Ảnh Gốc (Text trích xuất):**\n${summaryObj.original_image_text}\n\n**3. Ảnh Gốc (Dịch):**\n${summaryObj.translated_image_text}\n\n**4. Kết Quả Slide Tóm Tắt:**\n${summaryObj.reworked_image_text}`;
 
         const outputDir = path.join(__dirname, 'output');
         if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
-        fs.writeFileSync(path.join(outputDir, `web_report_${Date.now()}.md`), summary, 'utf8');
+        fs.writeFileSync(path.join(outputDir, `web_report_${Date.now()}.md`), summaryText, 'utf8');
 
         console.log(`[Lưu Dữ Liệu] Đang ghi đè lịch sử vào file Excel...`);
-        await saveToExcel(url, rawData, summary);
+        await saveToExcel(url, rawData, summaryObj);
 
         if (gsheetConfig) {
             console.log(`[Lưu Dữ Liệu Cloud] Đang đẩy lên Google Sheets...`);
-            await saveToGoogleSheets(gsheetConfig, url, rawData, summary, profileUrl);
+            await saveToGoogleSheets(gsheetConfig, url, rawData, summaryObj, profileUrl);
         }
 
         console.log(`[Hoàn Tất] Đã hoàn thành xử lý bài viết gốc.`);
@@ -216,7 +218,7 @@ app.post('/api/analyze', async (req, res) => {
                 url: url,
                 likes: rawData.likesCount,
                 slides: rawData.totalSlidesFound,
-                summary: summary
+                summary: summaryText
             }
         });
 

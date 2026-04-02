@@ -10,7 +10,7 @@
 <body>
     <header>
         <div class="header-content">
-            <h1>🔮 Instagram Nội Dung AI (V6.1) <span class="badge">PRO</span></h1>
+            <h1>🔮 Instagram Nội Dung AI (V7.0) <span class="badge">PRO</span></h1>
             <p class="subtitle" style="margin: 0; opacity: 0.7; font-size: 0.85rem;">Split Architecture: Static Discovery + Vision AI</p>
         </div>
         <button id="btnSettings" class="btn-outline" style="padding: 0.4rem 1rem; border-radius: 8px;">⚙️ GSheets</button>
@@ -33,6 +33,14 @@
                         <label>Số Tim Tối Thiểu (Lọc)</label>
                         <input type="number" id="minLikesInput" value="1000" placeholder="VD: 500">
                     </div>
+                    <div>
+                        <label>Số ảnh tối thiểu (Slide)</label>
+                        <input type="number" id="minImagesInput" value="4" min="1">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: flex-start; gap: 0.5rem; margin-top: auto; margin-bottom: 0.3rem;">
+                        <input type="checkbox" id="onlyCarouselInput" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                        <label for="onlyCarouselInput" style="cursor: pointer; margin: 0;">Chỉ cào bài Carousel</label>
+                    </div>
                 </div>
                 
                 <button id="btnFilter" class="btn-secondary">🔍 Yêu cầu Bot cào và Lọc URL</button>
@@ -46,8 +54,24 @@
 
             <div class="panel-section">
                 <h2>3. AI Mắt thần & Trọng tài <span class="highlight">(Custom Prompt)</span></h2>
-                <textarea id="customPrompt" placeholder="Nhập yêu cầu...">Chỉ phân tích các bài viết có liên quan đến du lịch/chi phí. Đối với bài thỏa mãn, hãy dịch text sang tiếng Việt, tóm tắt 4 slide ngắn, mỗi slide dưới 15 từ. Nếu bài viết không nói về chi phí hoặc kinh nghiệm đi lại, hãy ghi đúng chữ: SKIP.</textarea>
+                <textarea id="customPrompt" placeholder="Nhập yêu cầu...">1. BỘ LỌC (SKIP KEYWORD): Chỉ phân tích bài viết liên quan đến chia sẻ kinh nghiệm, kiến thức, hoặc du lịch. Nếu bài viết thuần quảng cáo bán hàng, nội dung xàm/giật tít, hãy đánh dấu SKIP (set is_skipped=true).
+2. DỊCH XUYÊN BIÊN GIỚI: Đọc Caption Gốc và text chữ trên hình ảnh, hãy dịch tất cả sang tiếng Việt với văn phong thân thiện, GenZ, dễ hiểu.
+3. TÁI TRÚC (ẢNH LÀM LẠI): Hãy chắt lọc toàn bộ tinh hoa từ ảnh gốc và viết lại nội dung cô đọng chia làm ĐÚNG 4 SLIDE (Không hơn không kém).
+- Slide 1: Tiêu đề siêu giật gân, khơi gợi tò mò.
+- Slide 2: Đặt vấn đề hoặc kiến thức chính (Ngắn gọn).
+- Slide 3: Giải pháp hoặc kinh nghiệm cực hay ho (Ngắn gọn).
+- Slide 4: Tổng kết & Call-to-action (Follow/Tim).
+*Lưu ý: Mỗi Slide Làm Lại không giữ quá 25 từ!*</textarea>
                 
+                <label style="display:block; margin-bottom: 0.5rem; margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">Chọn Model Gemini</label>
+                <select id="modelSelect" style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 0.5rem; border-radius: 6px; margin-bottom: 1rem; font-family: 'Inter', sans-serif;">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                    <option value="gemini-3.0-flash">Gemini 3.0 Flash</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                    <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                </select>
+
                 <button id="btnRun" class="btn-primary">🤖 KÍCH HOẠT QUY TRÌNH MẮT THẦN CHỤP ẢNH</button>
             </div>
         </aside>

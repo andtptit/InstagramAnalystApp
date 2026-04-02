@@ -11,8 +11,8 @@ async function launchBrowser() {
     });
 }
 
-// Hàm 1: Cuộn trang Profile -> Lấy Link -> Check Tim tĩnh (Nếu có yêu cầu)
-async function discoverPosts(profileUrl, limit = 20, minLikes = 0) {
+// Hàm 1: Cuộn trang Profile -> Lấy Link -> Check Tim tĩnh, Lọc Carousel và Đếm số ảnh
+async function discoverPosts(profileUrl, limit = 20, minLikes = 0, minImages = 4, onlyCarousel = true) {
     const browser = await launchBrowser();
     const page = await browser.newPage();
     const postUrls = new Set();
@@ -60,9 +60,9 @@ async function discoverPosts(profileUrl, limit = 20, minLikes = 0) {
         }
 
         const urlsToCheck = Array.from(postUrls).slice(0, limit);
-        console.log(`[Lọc Tĩnh] Đã gom được ${urlsToCheck.length} link. Bắt đầu bộ lọc kiểm tra Tim (Min: ${minLikes})...`);
+        console.log(`[Lọc Tĩnh] Lọc ${urlsToCheck.length} link. (MinLikes: ${minLikes}, MinImages: ${minImages}, OnlyCarousel: ${onlyCarousel})`);
 
-        // Bộ lọc tĩnh Lượt Thích 
+        // Bộ lọc tĩnh Lượt Thích và Thuộc tính Post
         for (let i = 0; i < urlsToCheck.length; i++) {
             const url = urlsToCheck[i];
             
@@ -123,7 +123,45 @@ async function discoverPosts(profileUrl, limit = 20, minLikes = 0) {
 
                 if (maxLikesNumeric > 0) {
                     if (maxLikesNumeric >= minLikes) {
-                        console.log(`[Lọc Tĩnh] ✅ ĐẠT (${maxLikesNumeric} Likes) -> THÊM VÀO URL LIST`);
+                        // Kiểm tra Carousel và số lượng Slide tối thiểu
+                        let isCarousel = false;
+                        let slideCount = 1;
+
+                        const nextButtonSel = 'button[aria-label="Next"], button[aria-label="Tiếp theo"], .coreSpriteRightChevron';
+                        const nextBtnInitial = await page.$(nextButtonSel);
+                        if (nextBtnInitial) isCarousel = true;
+
+                        if (onlyCarousel && !isCarousel) {
+                            console.log(`[Lọc Tĩnh] ❌ TRƯỢT -> Bài viết không phải dạng Carousel (Có thể là Reel/Single).`);
+                            continue;
+                        }
+
+                        if (minImages > 1) {
+                            if (!isCarousel) {
+                                slideCount = 1;
+                            } else {
+                                let currentCount = 1;
+                                // Đếm nội suy: Cố gắng click 'Next' để xác minh số slide (chỉ click đến khi đạt minImages)
+                                while(currentCount < minImages) {
+                                    const nextBtn = await page.$(nextButtonSel);
+                                    if (nextBtn) {
+                                        await nextBtn.click();
+                                        await page.waitForTimeout(600); // Chờ DOM render nút Next mới
+                                        currentCount++;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                slideCount = currentCount;
+                            }
+
+                            if (slideCount < minImages) {
+                                console.log(`[Lọc Tĩnh] ❌ TRƯỢT -> Số ảnh (${slideCount}) không đủ yêu cầu tối thiểu (${minImages}).`);
+                                continue;
+                            }
+                        }
+
+                        console.log(`[Lọc Tĩnh] ✅ ĐẠT (${maxLikesNumeric} Likes, ${slideCount}+ Slides) -> THÊM VÀO URL LIST`);
                         resultUrls.push(url);
                     } else {
                         console.log(`[Lọc Tĩnh] ❌ TRƯỢT (${maxLikesNumeric} Likes < ${minLikes})`);
