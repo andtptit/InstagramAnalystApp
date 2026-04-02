@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const ExcelJS = require('exceljs');
 const EventEmitter = require('events');
 const { getInstagramData, discoverPosts } = require('./scraper');
 const { analyzeAndSummarize } = require('./ai_service');
@@ -57,44 +56,8 @@ app.get('/api/logs', (req, res) => {
 });
 
 // ==========================================
-// 2. LOGIC LƯU EXCEL
+// 2. LOGIC LƯU CLOUD (GOOGLE SHEETS)
 // ==========================================
-async function saveToExcel(url, rawData, summaryObj) {
-    try {
-        const excelPath = path.join(__dirname, 'data.xlsx');
-        const workbook = new ExcelJS.Workbook();
-        let worksheet;
-
-        if (fs.existsSync(excelPath)) {
-            await workbook.xlsx.readFile(excelPath);
-            worksheet = workbook.getWorksheet('AnalysisHistory');
-        } else {
-            worksheet = workbook.addWorksheet('AnalysisHistory');
-            worksheet.columns = [
-                { header: 'Thời gian', key: 'timestamp', width: 20 },
-                { header: 'URL', key: 'url', width: 40 },
-                { header: 'Lượt thích', key: 'likes', width: 15 },
-                { header: 'Số lượng ảnh', key: 'slides', width: 15 },
-                { header: 'Tóm tắt', key: 'summary', width: 80 }
-            ];
-            worksheet.getRow(1).font = { bold: true };
-        }
-
-        const shortSummary = (summaryObj.reworked_image_text || "").split('\n').filter(l => l.trim()).join(' ').substring(0, 200) + "...";
-
-        worksheet.addRow({
-            timestamp: new Date().toLocaleString('vi-VN'),
-            url: url,
-            likes: rawData.likesCount,
-            slides: rawData.totalSlidesFound,
-            summary: shortSummary
-        });
-
-        await workbook.xlsx.writeFile(excelPath);
-    } catch (e) {
-        console.error("Lỗi khi lưu Excel:", e);
-    }
-}
 async function saveToGoogleSheets(gsheetConfig, url, rawData, summaryObj, profileUrl) {
     if (!gsheetConfig || !gsheetConfig.spreadsheetId || !gsheetConfig.jsonKey) {
         return console.log("[Google Sheets] Bỏ qua lưu Cloud vì chưa cấu hình.");
@@ -201,8 +164,7 @@ app.post('/api/analyze', async (req, res) => {
         if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
         fs.writeFileSync(path.join(outputDir, `web_report_${Date.now()}.md`), summaryText, 'utf8');
 
-        console.log(`[Lưu Dữ Liệu] Đang ghi đè lịch sử vào file Excel...`);
-        await saveToExcel(url, rawData, summaryObj);
+        console.log(`[Lưu Dữ Liệu] Chuẩn bị đóng gói kết quả...`);
 
         if (gsheetConfig) {
             console.log(`[Lưu Dữ Liệu Cloud] Đang đẩy lên Google Sheets...`);
