@@ -9,7 +9,12 @@ eventSource.onmessage = (event) => {
     p.className = `log-line ${data.type}`;
     p.innerHTML = `<span class="time">[${data.timestamp}]</span> ${escapeHTML(data.message)}`;
     liveLog.appendChild(p);
-    liveLog.scrollTop = liveLog.scrollHeight;
+    
+    // Cuộn xuống cuối một cách mượt mà và tin cậy hơn
+    liveLog.scrollTo({
+        top: liveLog.scrollHeight,
+        behavior: 'smooth'
+    });
 };
 
 btnClearLog.addEventListener('click', () => {

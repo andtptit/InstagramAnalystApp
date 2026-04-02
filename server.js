@@ -67,9 +67,9 @@ async function saveToExcel(url, rawData, summaryObj) {
 
         if (fs.existsSync(excelPath)) {
             await workbook.xlsx.readFile(excelPath);
-            worksheet = workbook.getWorksheet('History');
+            worksheet = workbook.getWorksheet('AnalysisHistory');
         } else {
-            worksheet = workbook.addWorksheet('History');
+            worksheet = workbook.addWorksheet('AnalysisHistory');
             worksheet.columns = [
                 { header: 'Thời gian', key: 'timestamp', width: 20 },
                 { header: 'URL', key: 'url', width: 40 },

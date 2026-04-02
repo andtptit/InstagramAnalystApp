@@ -131,37 +131,42 @@ async function discoverPosts(profileUrl, limit = 20, minLikes = 0, minImages = 4
                         const nextBtnInitial = await page.$(nextButtonSel);
                         if (nextBtnInitial) isCarousel = true;
 
-                        if (onlyCarousel && !isCarousel) {
-                            console.log(`[Lọc Tĩnh] ❌ TRƯỢT -> Bài viết không phải dạng Carousel (Có thể là Reel/Single).`);
-                            continue;
-                        }
+                        const hasVideo = await page.$('video') !== null;
 
-                        if (minImages > 1 && isCarousel) {
-                            let currentCount = 1;
-                            // Đếm nội suy: Cố gắng click 'Next' để xác minh số slide (chỉ click đến khi đạt minImages)
-                            while(currentCount < minImages) {
-                                const nextBtn = await page.$(nextButtonSel);
-                                if (nextBtn) {
-                                    await nextBtn.click();
-                                    await page.waitForTimeout(600); // Chờ DOM render nút Next mới
-                                    currentCount++;
-                                } else {
-                                    break;
-                                }
+                        if (hasVideo) {
+                            if (onlyCarousel) {
+                                console.log(`[Lọc Tĩnh] ❌ TRƯỢT -> Chỉ cào Carousel, bài này là Video/Reel.`);
+                                continue;
+                            } else {
+                                console.log(`[Lọc Tĩnh] 🎬 Bài viết Video/Reel -> Chấp nhận (Bỏ qua đếm ảnh).`);
                             }
-                            slideCount = currentCount;
+                        } else {
+                            // Bài viết là dạng Ảnh
+                            if (onlyCarousel && !isCarousel) {
+                                console.log(`[Lọc Tĩnh] ❌ TRƯỢT -> Bắt buộc Carousel, bài này là Single Image.`);
+                                continue;
+                            }
+
+                            if (minImages > 1 && isCarousel) {
+                                let currentCount = 1;
+                                while(currentCount < minImages) {
+                                    const nextBtn = await page.$(nextButtonSel);
+                                    if (nextBtn) {
+                                        await nextBtn.click();
+                                        await page.waitForTimeout(600);
+                                        currentCount++;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                slideCount = currentCount;
+                            } else if (!isCarousel) {
+                                slideCount = 1; // Single image count logic
+                            }
 
                             if (slideCount < minImages) {
                                 console.log(`[Lọc Tĩnh] ❌ TRƯỢT -> Số ảnh (${slideCount}) không đủ yêu cầu tối thiểu (${minImages}).`);
                                 continue;
-                            }
-                        } else if (!isCarousel) {
-                            slideCount = 1;
-                            const hasVideo = await page.$('video');
-                            if (hasVideo) {
-                                console.log(`[Lọc Tĩnh] 🎬 Phát hiện bài viết Video/Reel -> Chấp nhận không xét điều kiện số ảnh.`);
-                            } else {
-                                console.log(`[Lọc Tĩnh] 📸 Bài viết Single Image -> Chấp nhận (Vì bỏ tick chức năng Chỉ cào Carousel).`);
                             }
                         }
 

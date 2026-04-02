@@ -136,8 +136,16 @@ button {
 .result-content { font-size: 0.9rem; line-height: 1.5; color: #e2e8f0; white-space: pre-wrap;}
 
 /* TERMINAL VZONE */
-.terminal-section { flex: 0 0 250px; display: flex; flex-direction: column; padding: 0; background: var(--terminal-bg); border-color: rgba(255,255,255,0.05); }
-.terminal-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);}
+.terminal-section { 
+    flex: 0 0 350px; /* Tăng xíu chiều cao cho dễ đọc */
+    display: flex; 
+    flex-direction: column; 
+    padding: 0; 
+    background: var(--terminal-bg); 
+    border-color: rgba(255,255,255,0.05); 
+    min-height: 0; 
+}
+.terminal-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); min-height: 40px; flex-shrink: 0;}
 .terminal-header h2 { margin: 0; padding: 0; border: none; font-size: 0.9rem; color: #a1a1aa; display: flex; align-items: center; gap: 0.5rem; }
 .terminal-header h2::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 5px #22c55e;}
 
@@ -146,12 +154,14 @@ button {
 
 .terminal-body {
     flex: 1;
+    min-height: 0;
     padding: 1rem;
-    overflow-y: auto;
+    overflow-y: scroll; /* Ép luôn hiện thanh cuộn hoặc scroll được */
     overflow-x: hidden;
     font-family: 'Fira Code', monospace;
     font-size: 0.8rem;
     line-height: 1.6;
+    background: rgba(0,0,0,0.2);
 }
 
 .log-line { 
@@ -165,10 +175,10 @@ button {
 .log-line.error { color: #ef4444; }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); background-clip: content-box; }
 
 /* MODAL CÀI ĐẶT */
 .modal-overlay {
