@@ -218,6 +218,7 @@ app.post('/api/analyze', async (req, res) => {
                 url: url,
                 likes: rawData.likesCount,
                 slides: rawData.totalSlidesFound,
+                isVideo: rawData.isVideo,
                 summary: summaryText
             }
         });

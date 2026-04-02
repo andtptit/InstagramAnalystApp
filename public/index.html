@@ -54,14 +54,13 @@
 
             <div class="panel-section">
                 <h2>3. AI Mắt thần & Trọng tài <span class="highlight">(Custom Prompt)</span></h2>
-                <textarea id="customPrompt" placeholder="Nhập yêu cầu...">1. BỘ LỌC (SKIP KEYWORD): Chỉ phân tích bài viết liên quan đến chia sẻ kinh nghiệm, kiến thức, hoặc du lịch. Nếu bài viết thuần quảng cáo bán hàng, nội dung xàm/giật tít, hãy đánh dấu SKIP (set is_skipped=true).
-2. DỊCH XUYÊN BIÊN GIỚI: Đọc Caption Gốc và text chữ trên hình ảnh, hãy dịch tất cả sang tiếng Việt với văn phong thân thiện, GenZ, dễ hiểu.
-3. TÁI TRÚC (ẢNH LÀM LẠI): Hãy chắt lọc toàn bộ tinh hoa từ ảnh gốc và viết lại nội dung cô đọng chia làm ĐÚNG 4 SLIDE (Không hơn không kém).
-- Slide 1: Tiêu đề siêu giật gân, khơi gợi tò mò.
-- Slide 2: Đặt vấn đề hoặc kiến thức chính (Ngắn gọn).
-- Slide 3: Giải pháp hoặc kinh nghiệm cực hay ho (Ngắn gọn).
-- Slide 4: Tổng kết & Call-to-action (Follow/Tim).
-*Lưu ý: Mỗi Slide Làm Lại không giữ quá 25 từ!*</textarea>
+                <textarea id="customPrompt" placeholder="Nhập yêu cầu...">- **Nội dung làm lại (Tầm nhìn Pro):** AI hãy đọc kỹ cả Caption gốc và Text bóc tách từ ảnh để xào nấu lại thành đúng 4 Slide:
+  + Slide 1: Tiêu đề lôi cuốn (giật gân).
+  + Slide 2: Vấn đề/Kiến thức cốt lõi (Ngắn gọn).
+  + Slide 3: Giải pháp/Tips thực chiến (Chắt lọc ý hay nhất).
+  + Slide 4: Kết luận & Kêu gọi hành động.
+- **Bộ lọc:** Nếu bài viết là quảng cáo rác hoặc không có giá trị kiến thức, hãy đánh dấu `is_skipped: true`.
+*(Lưu ý: Hệ thống đã tự động bóc tách text từng ảnh rõ ràng, AI chỉ cần tập trung viết lại nội dung thật "chất" thôi!)*</textarea>
                 
                 <label style="display:block; margin-bottom: 0.5rem; margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">Chọn Model Gemini</label>
                 <select id="modelSelect" style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 0.5rem; border-radius: 6px; margin-bottom: 1rem; font-family: 'Inter', sans-serif;">

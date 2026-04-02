@@ -142,12 +142,19 @@ button {
     flex: 1;
     padding: 1rem;
     overflow-y: auto;
+    overflow-x: hidden;
     font-family: 'Fira Code', monospace;
     font-size: 0.8rem;
     line-height: 1.6;
 }
 
-.log-line { margin: 0 0 4px 0; word-break: break-all; color: var(--terminal-text); }
+.log-line { 
+    margin: 0 0 4px 0; 
+    word-break: break-word; 
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    color: var(--terminal-text); 
+}
 .log-line .time { color: #64748b; margin-right: 8px; }
 .log-line.error { color: #ef4444; }
 

@@ -154,11 +154,15 @@ function renderResult(result) {
     const resultsContainer = document.getElementById('resultsContainer');
     const card = document.createElement('div');
     card.className = 'result-card';
+    
+    // Phân biệt Video / Image
+    const mediaInfo = result.isVideo ? '🎬 Video/Reel' : `📸 ${result.slides} Slides (Ảnh)`;
+
     card.innerHTML = `
         <h3><a href="${result.url}" target="_blank" style="color: inherit; text-decoration: underline;">${result.url.substring(0, 45)}...</a></h3>
         <div class="result-meta">
             <span>❤️ ${result.likes} Likes</span>
-            <span>📸 ${result.slides} Slides (Ảnh)</span>
+            <span>${mediaInfo}</span>
         </div>
         <div class="result-content">${escapeHTML(result.summary)}</div>
     `;

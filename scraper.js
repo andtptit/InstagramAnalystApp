@@ -136,28 +136,32 @@ async function discoverPosts(profileUrl, limit = 20, minLikes = 0, minImages = 4
                             continue;
                         }
 
-                        if (minImages > 1) {
-                            if (!isCarousel) {
-                                slideCount = 1;
-                            } else {
-                                let currentCount = 1;
-                                // Đếm nội suy: Cố gắng click 'Next' để xác minh số slide (chỉ click đến khi đạt minImages)
-                                while(currentCount < minImages) {
-                                    const nextBtn = await page.$(nextButtonSel);
-                                    if (nextBtn) {
-                                        await nextBtn.click();
-                                        await page.waitForTimeout(600); // Chờ DOM render nút Next mới
-                                        currentCount++;
-                                    } else {
-                                        break;
-                                    }
+                        if (minImages > 1 && isCarousel) {
+                            let currentCount = 1;
+                            // Đếm nội suy: Cố gắng click 'Next' để xác minh số slide (chỉ click đến khi đạt minImages)
+                            while(currentCount < minImages) {
+                                const nextBtn = await page.$(nextButtonSel);
+                                if (nextBtn) {
+                                    await nextBtn.click();
+                                    await page.waitForTimeout(600); // Chờ DOM render nút Next mới
+                                    currentCount++;
+                                } else {
+                                    break;
                                 }
-                                slideCount = currentCount;
                             }
+                            slideCount = currentCount;
 
                             if (slideCount < minImages) {
                                 console.log(`[Lọc Tĩnh] ❌ TRƯỢT -> Số ảnh (${slideCount}) không đủ yêu cầu tối thiểu (${minImages}).`);
                                 continue;
+                            }
+                        } else if (!isCarousel) {
+                            slideCount = 1;
+                            const hasVideo = await page.$('video');
+                            if (hasVideo) {
+                                console.log(`[Lọc Tĩnh] 🎬 Phát hiện bài viết Video/Reel -> Chấp nhận không xét điều kiện số ảnh.`);
+                            } else {
+                                console.log(`[Lọc Tĩnh] 📸 Bài viết Single Image -> Chấp nhận (Vì bỏ tick chức năng Chỉ cào Carousel).`);
                             }
                         }
 
@@ -260,7 +264,13 @@ async function getInstagramData(url) {
         console.log(`[Mắt Thần] Kênh tác giả: ${authorUrl}`);
         console.log(`[Mắt Thần] Caption: ${caption.substring(0, 50)}...`);
 
-        console.log(`[Mắt Thần] Bắt đầu chụp ảnh các phân cảnh...`);
+        const isVideo = await page.$('video') !== null;
+        if (isVideo) {
+            console.log(`[Mắt Thần] 🎬 Phát hiện bài viết VIDEO! Đang chụp Screenshot ảnh bìa (thumbnail) làm bối cảnh...`);
+        } else {
+            console.log(`[Mắt Thần] 📸 Bắt đầu chụp ảnh các phân cảnh...`);
+        }
+
         let slideCount = 1;
         const maxSlides = 15; 
 
@@ -279,11 +289,15 @@ async function getInstagramData(url) {
             } catch(e) {
                 buffer = await page.screenshot({ type: 'jpeg', quality: 90 });
             }
-            
             screenshots.push({
                 mimeType: "image/jpeg",
                 data: buffer.toString('base64')
             });
+
+            if (isVideo) {
+                console.log(`[Mắt Thần] Thu thập 1 Thumbnail Video thành công.`);
+                break;
+            }
 
             // Tìm nút next
             const nextButton = await page.$('button[aria-label="Next"], button[aria-label="Tiếp theo"]');
@@ -312,7 +326,8 @@ async function getInstagramData(url) {
             caption: caption,
             authorUrl: authorUrl,
             totalSlidesFound: screenshots.length,
-            images: screenshots 
+            images: screenshots,
+            isVideo: isVideo
         };
 
     } catch (error) {
