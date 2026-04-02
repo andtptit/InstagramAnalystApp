@@ -102,6 +102,12 @@ button {
 .btn-secondary { background: var(--secondary); color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
 .btn-secondary:not(:disabled):hover { background: var(--secondary-hover); }
 
+.btn-warning { background: #f59e0b; color: white; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+.btn-warning:not(:disabled):hover { background: #d97706; }
+
+.btn-danger { background: #ef4444; color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+.btn-danger:not(:disabled):hover { background: #dc2626; }
+
 .btn-outline { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); width: auto; padding: 0.5rem 1rem;}
 .btn-outline:hover { color: white; border-color: white;}
 

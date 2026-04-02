@@ -93,8 +93,56 @@ document.getElementById('btnFilter').addEventListener('click', async () => {
     btn.innerText = '🔍 Yêu cầu Bot cào và Lọc URL';
 });
 
-// 3. LOGIC NÚT "AGENTIC" (VISION AI MẮT THẦN)
+// ==========================================
+// 3. LOGIC CONTROL THỊ GIÁC AI
+// ==========================================
+let isRunning = false;
+let isPaused = false;
+let isStopped = false;
+
+async function checkControlStatus() {
+    while (isPaused && !isStopped) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    if (isStopped) {
+        throw new Error("USER_STOPPED");
+    }
+}
+
+document.getElementById('btnPause').addEventListener('click', () => {
+    if (!isRunning) return;
+    isPaused = !isPaused;
+    const btn = document.getElementById('btnPause');
+    if (isPaused) {
+        btn.innerHTML = '▶ Tiếp tục';
+        btn.style.background = '#10b981'; // Xanh lá
+    } else {
+        btn.innerHTML = '⏸ Tạm dừng';
+        btn.style.background = ''; // Màu gốc
+    }
+});
+
+document.getElementById('btnStop').addEventListener('click', () => {
+    if (!isRunning) return;
+    isStopped = true;
+    document.getElementById('btnStop').innerText = '⏳ Đang dừng...';
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+    if (isRunning) {
+        isStopped = true;
+    }
+    // Xóa kết quả đi để bắt đầu chạy vòng đời mới
+    const resultsContainer = document.getElementById('resultsContainer');
+    resultsContainer.innerHTML = '<p class="empty-state" style="color: var(--text-muted);">Sau khi Mắt thần gửi dữ liệu cho API Gemini, thẻ tóm tắt sẽ hiện tại đây.</p>';
+    const liveLog = document.getElementById('liveLog');
+    liveLog.innerHTML = '<p class="log-line info">Hệ thống sẵn sàng. Hệ thống Log Server-Sent Events đã kết nối.</p>';
+});
+
+// 4. LOGIC NÚT "AGENTIC" (VISION AI MẮT THẦN)
 document.getElementById('btnRun').addEventListener('click', async () => {
+    if (isRunning) return;
+
     const urlsText = document.getElementById('approvedUrlList').value.trim();
     const customPrompt = document.getElementById('customPrompt').value.trim();
 
@@ -102,10 +150,21 @@ document.getElementById('btnRun').addEventListener('click', async () => {
 
     let urls = urlsText.split('\n').map(u => u.trim()).filter(u => u.startsWith('http'));
     urls = [...new Set(urls)]; // Bỏ trùng lặp
+    
+    isRunning = true;
+    isPaused = false;
+    isStopped = false;
 
     const btn = document.getElementById('btnRun');
     btn.disabled = true;
     btn.innerText = '🤖 Đang chạy Mắt thần (Tránh tắt tab)...';
+
+    document.getElementById('btnPause').style.display = 'block';
+    document.getElementById('btnPause').innerHTML = '⏸ Tạm dừng';
+    document.getElementById('btnPause').style.background = '';
+    
+    document.getElementById('btnStop').style.display = 'block';
+    document.getElementById('btnStop').innerHTML = '⏹ Dừng';
 
     const resultsContainer = document.getElementById('resultsContainer');
     if (resultsContainer.querySelector('.empty-state')) {
@@ -113,6 +172,8 @@ document.getElementById('btnRun').addEventListener('click', async () => {
     }
 
     for (let idx = 0; idx < urls.length; idx++) {
+        if (isStopped) break;
+        
         const url = urls[idx];
         
         // Lấy cấu hình Google Sheets
@@ -130,6 +191,8 @@ document.getElementById('btnRun').addEventListener('click', async () => {
         const modelName = document.getElementById('modelSelect').value;
 
         try {
+            await checkControlStatus(); // Kiểm tra Pause/Stop
+            
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -141,9 +204,21 @@ document.getElementById('btnRun').addEventListener('click', async () => {
                 renderResult(data.result);
             }
         } catch (err) {
+            if (err.message === "USER_STOPPED") {
+                console.log('Tiến trình Mắt thần bị huỷ bởi người dùng.');
+                break;
+            }
             console.error('Lỗi khi fetch analyze API', err);
         }
     }
+
+    // Kết thúc vòng lặp
+    isRunning = false;
+    isPaused = false;
+    isStopped = false;
+    
+    document.getElementById('btnPause').style.display = 'none';
+    document.getElementById('btnStop').style.display = 'none';
 
     btn.disabled = false;
     btn.innerText = '🤖 KÍCH HOẠT QUY TRÌNH MẮT THẦN CHỤP ẢNH';
