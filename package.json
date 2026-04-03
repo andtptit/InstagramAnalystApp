@@ -4,12 +4,11 @@
   "description": "Standalone Instagram Content Analyst App",
   "main": "main.js",
   "scripts": {
-    "start": "node main.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^16.4.5",
-    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "google-auth-library": "^10.6.2",
     "google-spreadsheet": "^5.2.0",

@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const { getInstagramData } = require('./scraper');
 const { analyzeAndSummarize } = require('./ai_service');
-const ExcelJS = require('exceljs');
 
 async function main() {
     console.log("=========================================");
@@ -51,40 +50,7 @@ async function main() {
 
         fs.writeFileSync(filePath, summary, 'utf8');
 
-        // BƯỚC 4: Lưu vào Excel (Version 2)
-        console.log("📊 BƯỚC 4: Đang cập nhật file Excel dữ liệu...");
-        const excelPath = path.join(__dirname, 'data.xlsx');
-        const workbook = new ExcelJS.Workbook();
-        let worksheet;
-
-        if (fs.existsSync(excelPath)) {
-            await workbook.xlsx.readFile(excelPath);
-            worksheet = workbook.getWorksheet('History');
-        } else {
-            worksheet = workbook.addWorksheet('History');
-            worksheet.columns = [
-                { header: 'Thời gian', key: 'timestamp', width: 20 },
-                { header: 'URL', key: 'url', width: 40 },
-                { header: 'Lượt thích', key: 'likes', width: 15 },
-                { header: 'Số lượng ảnh', key: 'slides', width: 15 },
-                { header: 'Tóm tắt ngắn', key: 'summary', width: 60 }
-            ];
-            // Định dạng header
-            worksheet.getRow(1).font = { bold: true };
-        }
-
-        // Tạo tóm tắt ngắn từ kết quả AI (lấy 100 ký tự đầu hoặc dòng đầu tiên)
-        const shortSummary = summary.split('\n')[0].substring(0, 150) + "...";
-
-        worksheet.addRow({
-            timestamp: new Date().toLocaleString('vi-VN'),
-            url: url,
-            likes: rawData.likesCount,
-            slides: rawData.totalSlidesFound,
-            summary: shortSummary
-        });
-
-        await workbook.xlsx.writeFile(excelPath);
+        console.log("\n📦 BƯỚC 4: Hoàn tất lưu dữ liệu local...");
 
         console.log(`\n🎉 THÀNH CÔNG!`);
         console.log(`Báo cáo đã được lưu tại: ${filePath}`);
